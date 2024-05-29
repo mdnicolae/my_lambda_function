@@ -12,7 +12,7 @@ resource "aws_iam_role" "lambda_role" {
       Principal = {
         Service = "lambda.amazonaws.com"
       },
-      Action: "sts:AssumeRole"
+      Action = "sts:AssumeRole"
     }]
   })
 }
@@ -37,10 +37,22 @@ resource "aws_dynamodb_table" "telegram_stocks" {
     name = "ticker"
     type = "S"
   }
+
+  # Global Secondary Indexes (optional, if you need additional query patterns)
+  global_secondary_index {
+    name            = "ticker-index"
+    hash_key        = "ticker"
+    projection_type = "ALL"
+  }
+}
+
+resource "aws_s3_bucket" "lambda_bucket" {
+  bucket = "telegram-bot-lambda-bucket"
 }
 
 resource "aws_lambda_function" "telegram_bot" {
-  filename         = "lambda_function.zip"
+  s3_bucket        = aws_s3_bucket.lambda_bucket.bucket
+  s3_key           = "lambda_function.zip"
   function_name    = "telegram_bot"
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_function.lambda_handler"
@@ -53,14 +65,20 @@ resource "aws_lambda_function" "telegram_bot" {
   }
 }
 
+resource "aws_lambda_layer_version" "my_layer" {
+  layer_name = "my-bot-layer"
+  s3_bucket        = aws_s3_bucket.lambda_bucket.bucket
+  s3_key           = "python.zip"
+  compatible_runtimes = ["python3.8"]
+}
 
-resource "aws_cloudwatch_event_rule" "every_minute" {
-  name                = "every_minute"
-  schedule_expression = "rate(1 minute)"
+resource "aws_cloudwatch_event_rule" "every_five_minutes" {
+  name                = "every_five_minutes"
+  schedule_expression = "rate(5 minutes)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda_target" {
-  rule      = aws_cloudwatch_event_rule.every_minute.name
+  rule      = aws_cloudwatch_event_rule.every_five_minutes.name
   target_id = "telegram_bot"
   arn       = aws_lambda_function.telegram_bot.arn
 }
@@ -70,5 +88,5 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.telegram_bot.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_minute.arn
+  source_arn    = aws_cloudwatch_event_rule.every_five_minutes.arn
 }

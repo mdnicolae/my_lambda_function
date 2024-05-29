@@ -1,0 +1,9 @@
+You can control me by sending these commands:
+
+/register => register new ticker alert with the following format: /register TICKER:PRICE
+e.g: /register AAPL:10
+
+/remove => remove a ticker alert with the following format /remove TICKER
+e.g: /remove AAPL
+
+/list - list all ticker alerts. e.g. /list
