@@ -123,7 +123,6 @@ def lambda_handler(event, context):
         try:
             body = json.loads(event['body'])
             if 'message' in body:
-                print(body)
                 handle_command(body)
         except json.JSONDecodeError:
             print("Failed to decode JSON body")
