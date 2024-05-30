@@ -30,7 +30,7 @@ def register_user(data):
                 tg.send_message(chat_id, f"{ticker} is not a valid stock")
                 return
 
-            current_price = stock.get_stock_price(ticker)
+            current_price = stock.get_stock_price_finnhub(ticker)
             if current_price is None:
                 tg.send_message(chat_id, "Error retrieving stock price. Please retry later")
                 return
@@ -59,9 +59,9 @@ def check_all_registered_stocks():
         percentage = item['percentage']
         last_price = Decimal(str(item['last_price']))
 
-        current_price = stock.get_stock_price(ticker)
+        current_price = stock.get_stock_price_finnhub(ticker)
         if current_price is None:
-            tg.send_message(chat_id, "Something went wrong. Please contact the administrator.")
+            tg.send_message(chat_id, "Something went getting prices. Please contact the administrator.")
             return
 
         current_price = Decimal(str(current_price))

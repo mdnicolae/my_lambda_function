@@ -1,9 +1,11 @@
 import requests
 import helper
+import finnhub as fh
 
 secret_name = "telegram/bot_token"
 secrets = helper.get_secret(secret_name)
 STOCK_API_TOKEN = secrets.get('STOCK_API_TOKEN')
+FINNHUB_API_TOKEN = secrets.get('FINNHUB_API_TOKEN')
 
 SEARCH_URL = f"https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=AAPL&apikey={STOCK_API_TOKEN}"
 
@@ -37,4 +39,14 @@ def ticker_exists(ticker):
         return False
     except Exception as e:
         print(f"Error searching stock: {e}")
+        return None
+
+
+def get_stock_price_finnhub(ticker):
+    client = fh.Client(api_key=FINNHUB_API_TOKEN)
+    try:
+        res = client.quote(ticker)
+        return res['c']
+    except Exception as e:
+        print(f"Error retrieving stock price: {e}")
         return None
