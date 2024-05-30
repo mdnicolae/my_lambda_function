@@ -59,13 +59,15 @@ def check_all_registered_stocks():
         percentage = item['percentage']
         last_price = Decimal(str(item['last_price']))
 
-        current_price = Decimal(str(stock.get_stock_price(ticker)))
+        current_price = stock.get_stock_price(ticker)
         if current_price is None:
             tg.send_message(chat_id, "Something went wrong. Please contact the administrator.")
             return
 
+        current_price = Decimal(str(current_price))
+
         if current_price > last_price * (1 + percentage / 100) or current_price < last_price * (1 - percentage / 100):
-            tg.send_message(chat_id, f"${ticker} price has changed by more than {percentage}%")
+            tg.send_message(chat_id, f"⚠️ ${ticker} price has changed by more than {percentage}% and is now at ${current_price}")
             table.update_item(
                 Key={
                     'chat_id': str(chat_id),
