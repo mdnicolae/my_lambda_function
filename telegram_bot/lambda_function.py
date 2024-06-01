@@ -65,9 +65,15 @@ def check_all_registered_stocks():
             return
 
         current_price = Decimal(str(current_price))
+        increased = current_price > last_price * (1 + percentage / 100)
+        decreased = current_price < last_price * (1 - percentage / 100)
 
-        if current_price > last_price * (1 + percentage / 100) or current_price < last_price * (1 - percentage / 100):
-            tg.send_message(chat_id, f"⚠️ ${ticker} price has changed by more than {percentage}% and is now at ${current_price}")
+        message = f"🟩 📈 *${ticker}* price has gained more than {percentage}% and is now at *${current_price}*"
+        if decreased:
+            message = f"🟥 📉 *${ticker}* price has dumped by more than {percentage}% and is now at *${current_price}*"
+
+        if increased or decreased:
+            tg.send_message(chat_id, message)
             table.update_item(
                 Key={
                     'chat_id': str(chat_id),
@@ -90,16 +96,18 @@ def handle_command(data):
     if text.startswith("/register"):
         register_user(data)
         return
+
     if text.startswith("/list"):
         response = table.scan()
         if response['Count'] == 0:
             tg.send_message(chat_id, "No registered stocks found")
         else:
-            message = "Registered stocks:\n"
+            message = "Registered stocks:\n\n"
             for item in response['Items']:
-                message += f"${item['ticker']} - {item['percentage']}%\n"
+                message += f"${item['ticker']} - {item['percentage']}% - last sent at: *${str(item['last_price'])}*\n"
             tg.send_message(chat_id, message)
         return
+
     if text.startswith("/remove"):
         try:
             _, ticker = text.split()
@@ -113,7 +121,8 @@ def handle_command(data):
         except ValueError:
             tg.send_message(chat_id, "Something went wrong removing the stock. Please try again later")
         return
-    if text.startswith("/help"):
+
+    if text.startswith("/help") or text.startswith("/start"):
         tg.send_message(chat_id, helper.read_help_file("help.txt"))
         return
 

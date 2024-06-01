@@ -10,7 +10,7 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/" if TELEGRAM_
 
 def send_message(chat_id, text):
     url = TELEGRAM_API_URL + "sendMessage"
-    payload = {'chat_id': chat_id, 'text': text}
+    payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'}
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()

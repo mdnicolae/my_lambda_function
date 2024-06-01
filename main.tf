@@ -72,13 +72,14 @@ resource "aws_lambda_layer_version" "my_layer" {
   compatible_runtimes = ["python3.8"]
 }
 
-resource "aws_cloudwatch_event_rule" "every_five_minutes" {
-  name                = "every_five_minutes"
-  schedule_expression = "rate(5 minutes)"
+resource "aws_cloudwatch_event_rule" "us_stock_market_hours" {
+  name                = "us_stock_market_hours"
+  description         = "Trigger every 5 minutes during US stock market trading hours (Monday to Friday, 9:30 AM - 4:00 PM ET)"
+  schedule_expression = "cron(*/5 13-22 ? * MON-FRI *)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda_target" {
-  rule      = aws_cloudwatch_event_rule.every_five_minutes.name
+  rule      = aws_cloudwatch_event_rule.us_stock_market_hours.name
   target_id = "telegram_bot"
   arn       = aws_lambda_function.telegram_bot.arn
 }
@@ -88,5 +89,5 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.telegram_bot.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.every_five_minutes.arn
+  source_arn    = aws_cloudwatch_event_rule.us_stock_market_hours.arn
 }
